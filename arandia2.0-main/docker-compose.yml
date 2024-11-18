@@ -1,0 +1,52 @@
+
+version: "3.8"
+
+services:
+
+  webserver:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - users_api
+    networks:
+      - dev_network
+
+  users_api:
+    build:
+      context: ./APIS
+    deploy:
+      replicas: 1  # Configuración de una sola réplica para evitar conflictos
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 256M
+    ports:
+      - "4000:4000"  # Asegurar un puerto único y consistente
+    volumes:
+      - ./APIS/usuarios:/usr/userAPI
+    networks:
+      - dev_network
+
+  db_dev:
+    image: postgres:15   # Imagen oficial de PostgreSQL
+    container_name: users_db_dev
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dev_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dev_network
+
+volumes:
+  postgres_data:
+
+networks:
+  dev_network:
